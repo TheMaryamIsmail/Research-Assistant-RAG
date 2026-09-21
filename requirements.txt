@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+pypdf
+google-genai
+numpy
+python-dotenv
+pydantic
+scikit-learn

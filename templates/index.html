@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Paper Assistant</title>
+    <style>
+        :root {
+            /* White & Electric Blue Glassmorphism Palette */
+            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 40%, #f0f9ff 100%);
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-panel: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.8);
+            --glass-shadow: 0 8px 32px 0 rgba(14, 165, 233, 0.15);
+            
+            --primary-blue: #0284c7;
+            --primary-hover: #0369a1;
+            --primary-light: #e0f2fe;
+            --accent-glow: rgba(56, 189, 248, 0.5);
+            
+            --text-dark: #0f172a;
+            --text-muted: #475569;
+            --user-msg: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            --bot-msg: rgba(255, 255, 255, 0.85);
+            --error-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-dark);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Animated Background Orbs for Glass Effect */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            animation: floatOrb 12s ease-in-out infinite alternate;
+        }
+
+        body::before {
+            width: 400px;
+            height: 400px;
+            background: rgba(56, 189, 248, 0.35);
+            top: -100px;
+            left: -100px;
+        }
+
+        body::after {
+            width: 500px;
+            height: 500px;
+            background: rgba(186, 230, 253, 0.6);
+            bottom: -150px;
+            right: -100px;
+            animation-delay: -6s;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 40px) scale(1.1); }
+        }
+
+        /* Sidebar - Glassmorphism */
+        .sidebar {
+            width: 320px;
+            background: var(--glass-panel);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .sidebar h2 {
+            font-size: 1.3rem;
+            color: var(--text-dark);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        /* Drag & Drop Upload Zone */
+        .upload-area {
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px dashed rgba(2, 132, 199, 0.4);
+            border-radius: 16px;
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-blue);
+            background: rgba(255, 255, 255, 0.7);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(2, 132, 199, 0.15);
+        }
+
+        .upload-area p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .file-input { display: none; }
+
+        .file-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--glass-border);
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--text-dark);
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            animation: fadeIn 0.4s ease-out forwards;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--user-msg);
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+            transition: all 0.25s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            box-shadow: none;
+        }
+
+        .btn-reset:hover {
+            background: rgba(255, 255, 255, 0.85);
+            color: var(--text-dark);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Main Chat Window */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 20px 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Message Bubbles with Animations */
+        .message {
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 18px;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: relative;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--user-msg);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: var(--bot-msg);
+            color: var(--text-dark);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Source Tags */
+        .sources {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .source-tag {
+            display: inline-block;
+            background: rgba(2, 132, 199, 0.1);
+            color: var(--primary-blue);
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-right: 6px;
+            margin-top: 6px;
+            font-weight: 600;
+            border: 1px solid rgba(2, 132, 199, 0.2);
+        }
+
+        /* Input Bar Area */
+        .chat-input-area {
+            padding: 20px 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 14px 20px;
+            color: var(--text-dark);
+            outline: none;
+            font-size: 0.95rem;
+            transition: all 0.25s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .chat-input-area input:focus {
+            background: #ffffff;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        /* Glass Pulse Spinner */
+        .spinner {
+            border: 3px solid rgba(2, 132, 199, 0.2);
+            border-top: 3px solid var(--primary-blue);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: translateY(12px) scale(0.96); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(6px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Documents</h2>
+        <div class="upload-area" onclick="document.getElementById('file-input').click()">
+            <p><strong>Click or Drop PDFs</strong><br><span style="font-size:0.78rem;">Upload research papers</span></p>
+            <input type="file" id="file-input" class="file-input" multiple accept=".pdf" onchange="handleFileUpload(event)">
+        </div>
+
+        <div id="upload-status" style="font-size: 0.85rem; font-weight: 500;"></div>
+        <div class="file-list" id="file-list"></div>
+
+        <button class="btn btn-reset" onclick="resetSession()">Clear Session</button>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+             Research Paper Assistant
+        </div>
+
+        <div class="chat-messages" id="chat-messages">
+            <div class="message assistant">
+                Hello! Upload your PDF research papers using the sidebar to start asking context-grounded questions.
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Ask a question about the papers..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFiles = [];
+
+        async function handleFileUpload(event) {
+            const files = event.target.files;
+            if (!files.length) return;
+
+            const formData = new FormData();
+            for (let file of files) {
+                if (!file.name.endsWith('.pdf')) {
+                    alert(`Only PDFs allowed: ${file.name}`);
+                    return;
+                }
+                formData.append('files', file);
+            }
+
+            const statusDiv = document.getElementById('upload-status');
+            statusDiv.innerHTML = '<span class="spinner"></span> Processing embeddings...';
+
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (response.ok) {
+                    statusDiv.innerHTML = '<span style="color: #0284c7;">Loaded successfully!</span>';
+                    uploadedFiles = data.filenames;
+                    renderFileList();
+                    addMessage('assistant', `Loaded ${data.filenames.length} document(s). What would you like to ask?`);
+                } else {
+                    statusDiv.innerHTML = `<span style="color: var(--error-color);">${data.detail}</span>`;
+                }
+            } catch (err) {
+                statusDiv.innerHTML = '<span style="color: var(--error-color);">Upload failed.</span>';
+            }
+        }
+
+        function renderFileList() {
+            document.getElementById('file-list').innerHTML = 
+                uploadedFiles.map(f => `<div class="file-item">📄 ${f}</div>`).join('');
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const question = input.value.trim();
+            if (!question) return;
+
+            addMessage('user', question);
+            input.value = '';
+
+            const loadingId = addMessage('assistant', '<span class="spinner"></span> Searching papers & generating answer...');
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+
+                if (response.ok) {
+                    let sourceHtml = '';
+                    if (data.sources && data.sources.length > 0) {
+                        sourceHtml = '<div class="sources"><strong>Sources:</strong><br>' +
+                            data.sources.map(s => `<span class="source-tag">📄 ${s.document} (pg. ${s.page})</span>`).join('') +
+                            '</div>';
+                    }
+                    addMessage('assistant', data.answer + sourceHtml);
+                } else {
+                    addMessage('assistant', `Error: ${data.detail}`);
+                }
+            } catch (err) {
+                document.getElementById(loadingId).remove();
+                addMessage('assistant', 'Error fetching response.');
+            }
+        }
+
+        function addMessage(sender, htmlContent) {
+            const container = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            const msgId = 'msg-' + Date.now();
+            msgDiv.id = msgId;
+            msgDiv.className = `message ${sender}`;
+            msgDiv.innerHTML = htmlContent;
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+            return msgId;
+        }
+
+        async function resetSession() {
+            await fetch('/reset', { method: 'POST' });
+            uploadedFiles = [];
+            renderFileList();
+            document.getElementById('upload-status').innerHTML = '';
+            document.getElementById('chat-messages').innerHTML = `
+                <div class="message assistant">Session cleared. Upload new PDFs to continue.</div>
+            `;
+        }
+    </script>
+</body>
+</html>

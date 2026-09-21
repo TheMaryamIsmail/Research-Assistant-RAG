@@ -1,0 +1,31 @@
+# Environment variables (API Keys secret rakhne ke liye)
+.env
+.env.*
+
+# Python Virtual Environments
+.rag_assistant/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Vercel deployment cache
+.vercel/
+
+# Temporary / Uploaded Files & OS Junk
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
