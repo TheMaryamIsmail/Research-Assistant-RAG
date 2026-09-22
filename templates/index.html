@@ -73,6 +73,38 @@
             100% { transform: translate(60px, 40px) scale(1.1); }
         }
 
+        /* Mobile Header (Hidden on Desktop) */
+        .mobile-header {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-panel);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0 20px;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 20;
+        }
+
+        .menu-toggle {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
         /* Sidebar - Glassmorphism */
         .sidebar {
             width: 320px;
@@ -85,7 +117,8 @@
             flex-direction: column;
             padding: 24px;
             gap: 20px;
-            z-index: 10;
+            z-index: 30;
+            transition: transform 0.3s ease-in-out;
         }
 
         .sidebar h2 {
@@ -143,6 +176,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            word-break: break-all;
         }
 
         /* Buttons */
@@ -156,6 +190,7 @@
             font-weight: 600;
             box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
             transition: all 0.25s ease;
+            white-space: nowrap;
         }
 
         .btn:hover {
@@ -217,6 +252,7 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
             animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
             position: relative;
+            word-break: break-word;
         }
 
         .message.user {
@@ -277,6 +313,7 @@
             font-size: 0.95rem;
             transition: all 0.25s ease;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+            min-width: 0;
         }
 
         .chat-input-area input:focus {
@@ -298,6 +335,19 @@
             margin-right: 6px;
         }
 
+        /* Sidebar Overlay for Mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 25;
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -312,11 +362,75 @@
             0% { opacity: 0; transform: translateY(6px); }
             100% { opacity: 1; transform: translateY(0); }
         }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                height: 100vh;
+                height: 100dvh;
+            }
+
+            .mobile-header {
+                display: flex;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 280px;
+                transform: translateX(-100%);
+                padding-top: 80px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .chat-container {
+                padding-top: 60px;
+                height: 100%;
+            }
+
+            .chat-header {
+                display: none; /* Replaced by mobile header title */
+            }
+
+            .chat-messages {
+                padding: 15px;
+            }
+
+            .message {
+                max-width: 85%;
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+
+            .chat-input-area {
+                padding: 12px 15px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
+    <!-- Mobile Header with Toggle Button -->
+    <div class="mobile-header">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <span style="font-weight: 700; font-size: 1rem;">Research Paper Assistant</span>
+        <div style="width: 32px;"></div> <!-- Spacer for balance -->
+    </div>
+
+    <!-- Backdrop Overlay for Mobile Drawer -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
         <h2>Documents</h2>
         <div class="upload-area" onclick="document.getElementById('file-input').click()">
             <p><strong>Click or Drop PDFs</strong><br><span style="font-size:0.78rem;">Upload research papers</span></p>
@@ -348,6 +462,13 @@
 
     <script>
         let uploadedFiles = [];
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
 
         async function handleFileUpload(event) {
             const files = event.target.files;
